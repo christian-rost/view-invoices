@@ -30,7 +30,9 @@ if not admin_pw:
     logger.warning("admin_pw not set - admin login disabled")
 
 # CORS Configuration
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
+_cors_env = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
+CORS_ORIGINS = [origin.strip().strip('"').strip("'") for origin in _cors_env.split(",") if origin.strip()]
+logger.info(f"CORS_ORIGINS configured: {CORS_ORIGINS}")
 
 # Data directories
 DATA_DIR = "data/conversations"
