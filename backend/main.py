@@ -235,9 +235,12 @@ async def get_invoice(invoice_id: int, current_user: dict = Depends(get_current_
 
         invoice = response.data[0]
 
-        # Fetch line items (leistungen)
-        leistungen_response = supabase.table("leistungen").select("*").eq("rechnung_id", invoice_id).execute()
-        invoice["leistungen"] = leistungen_response.data or []
+        # Fetch line items (leistungen) by rechnungs_nummer
+        if invoice.get("nummer"):
+            leistungen_response = supabase.table("leistungen").select("*").eq("rechnungs_nummer", invoice["nummer"]).execute()
+            invoice["leistungen"] = leistungen_response.data or []
+        else:
+            invoice["leistungen"] = []
 
         return invoice
     except HTTPException:
