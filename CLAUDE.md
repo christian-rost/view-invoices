@@ -7,7 +7,15 @@ This file contains technical details, architectural decisions, and important imp
 - **GitHub**: https://github.com/christian-rost/view-invoices
 - **Branch**: `main`
 - **Produktname**: View Invoices
-- **Deployment**: Coolify auf VPS (geplant)
+- **Deployment**: Coolify auf VPS ✓
+
+### Production URLs
+
+| Service | URL |
+|---------|-----|
+| Frontend | https://view-invoices-frontend.xqtfive.de |
+| Backend | https://view-invoices-backend.xqtfive.de |
+| Supabase | https://supabase.xqtfive.de |
 
 ## Project Overview
 
@@ -149,20 +157,47 @@ Backend (via `pyproject.toml` + uv):
 - pydantic[email]
 - python-jose[cryptography]
 - passlib[bcrypt]
+- **bcrypt==4.0.1** (gepinnt wegen Kompatibilität mit passlib)
 - slowapi
 - supabase
 
 Frontend (via `package.json`):
 - React 19
 - Vite 7
+- serve (für Production Static Hosting)
 
 ## Supabase Table: `rechnungen`
 
-Expected columns:
-- `id` (int, primary key)
-- `datum` (date)
-- `nummer` (text)
-- `erbringer_name` (text)
+**Instance:** https://supabase.xqtfive.de (Self-hosted)
+
+### Aktuelle Spalten (Stand 2026-02-02)
+
+| Spalte | Typ | Beschreibung |
+|--------|-----|--------------|
+| `id` | int8 | Primary Key |
+| `created_at` | timestamptz | Erstellungszeitpunkt |
+| `datum` | text | Rechnungsdatum |
+| `nummer` | text | Rechnungsnummer |
+| `gesamtpreis` | text | Gesamtbetrag mit Währung |
+| `erbringer_name` | text | Name des Leistungserbringers |
+
+### Row Level Security (RLS)
+
+**Aktueller Status:** RLS deaktiviert
+
+Für Produktionsbetrieb mit RLS:
+```sql
+-- RLS aktivieren
+ALTER TABLE rechnungen ENABLE ROW LEVEL SECURITY;
+
+-- Lesezugriff für authentifizierte User
+CREATE POLICY "Allow authenticated read" ON rechnungen
+FOR SELECT TO authenticated USING (true);
+```
+
+### Erweiterte Spalten (optional)
+
+Falls mehr Details benötigt werden:
 - `erbringer_anschrift` (text)
 - `erbringer_steuernummer` (text)
 - `empfaenger_name` (text)
@@ -191,18 +226,76 @@ Expected columns:
 2. **JWT_SECRET missing**: Backend won't start - generate with `openssl rand -base64 32`
 3. **CORS Issues**: Set `CORS_ORIGINS` for production
 4. **Supabase not configured**: `/api/invoices` returns 503
+5. **bcrypt/passlib Fehler**: `bcrypt>=4.1` ist inkompatibel mit `passlib` - daher `bcrypt==4.0.1` gepinnt
+6. **Keine Rechnungen angezeigt**: Prüfe ob RLS in Supabase deaktiviert ist oder eine SELECT Policy existiert
+7. **"failed to fetch" bei Registration**: Meist bcrypt-Problem oder Backend nicht erreichbar
+
+## Gelöste Probleme (2026-02-02)
+
+| Problem | Symptom | Ursache | Lösung |
+|---------|---------|---------|--------|
+| Registration fehlgeschlagen | "failed to fetch" / 500 Error | bcrypt 4.1+ inkompatibel mit passlib | `bcrypt==4.0.1` in pyproject.toml gepinnt |
+| Keine Rechnungen | Leere Liste trotz Daten in DB | Supabase RLS ohne Policy | RLS deaktiviert oder Policy erstellt |
 
 ## Coolify Deployment
 
-Deploy as two separate services (like llm-council):
+Deploy als zwei separate Services auf Coolify.
 
-**Backend:**
-- Build: Nixpacks (Python)
-- Port: 8001
-- Environment variables from .env.example
+### Backend Service
 
-**Frontend:**
-- Build: Nixpacks (Node)
-- Build command: `npm run build`
-- Start command: `npm run preview`
-- Environment: `VITE_API_BASE=https://backend-url`
+| Einstellung | Wert |
+|-------------|------|
+| Git Source | https://github.com/christian-rost/view-invoices |
+| Branch | main |
+| Base Directory | `/` |
+| Build Pack | Nixpacks |
+| Port | 8001 |
+
+**Environment Variables:**
+```
+JWT_SECRET=<generiert mit: openssl rand -base64 32>
+SUPABASE_URL=https://supabase.xqtfive.de
+SUPABASE_KEY=<dein-supabase-anon-key>
+CORS_ORIGINS=https://view-invoices-frontend.xqtfive.de
+admin_user=admin
+admin_pw=<sicheres-passwort>
+```
+
+**Persistent Storage:** Nicht zwingend erforderlich (User werden in JSON gespeichert, gehen bei Redeploy verloren). Für persistente User optional Volume für `/app/data`.
+
+### Frontend Service
+
+| Einstellung | Wert |
+|-------------|------|
+| Git Source | https://github.com/christian-rost/view-invoices |
+| Branch | main |
+| Base Directory | `/frontend` |
+| Build Pack | Nixpacks |
+| Port | 3000 |
+
+**Environment Variables:**
+```
+VITE_API_BASE=https://view-invoices-backend.xqtfive.de
+```
+
+**nixpacks.toml** (bereits im Repo):
+```toml
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npx serve dist -s -p 3000 -L"
+```
+
+### Deployment-Reihenfolge
+
+1. Backend zuerst deployen
+2. Health-Check: `curl https://view-invoices-backend.xqtfive.de/api/health`
+3. Frontend deployen
+4. Supabase RLS prüfen/konfigurieren
