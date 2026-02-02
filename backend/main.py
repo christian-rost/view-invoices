@@ -104,11 +104,21 @@ class LeistungResponse(BaseModel):
     wert: Optional[str] = None
 
 
+class BestellungResponse(BaseModel):
+    id: int
+    bestellnummer: Optional[str] = None
+    datum: Optional[str] = None
+    status: Optional[str] = None
+    lieferadresse: Optional[str] = None
+    gesamtwert: Optional[str] = None
+
+
 class InvoiceDetailResponse(BaseModel):
     id: int
     created_at: Optional[str] = None
     datum: Optional[str] = None
     nummer: Optional[str] = None
+    bestellnummer: Optional[str] = None
     gesamtpreis: Optional[str] = None
     erbringer_name: Optional[str] = None
     erbringer_anschrift: Optional[str] = None
@@ -117,6 +127,7 @@ class InvoiceDetailResponse(BaseModel):
     empfaenger_name: Optional[str] = None
     empfaenger_anschrift: Optional[str] = None
     leistungen: list[LeistungResponse] = []
+    bestellung: Optional[BestellungResponse] = None
 
 
 # Authentication endpoints
@@ -241,6 +252,13 @@ async def get_invoice(invoice_id: int, current_user: dict = Depends(get_current_
             invoice["leistungen"] = leistungen_response.data or []
         else:
             invoice["leistungen"] = []
+
+        # Fetch order (bestellung) by bestellnummer
+        if invoice.get("bestellnummer"):
+            bestellung_response = supabase.table("bestellungen").select("*").eq("bestellnummer", invoice["bestellnummer"]).execute()
+            invoice["bestellung"] = bestellung_response.data[0] if bestellung_response.data else None
+        else:
+            invoice["bestellung"] = None
 
         return invoice
     except HTTPException:
