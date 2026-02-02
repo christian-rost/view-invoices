@@ -97,6 +97,13 @@ class InvoiceResponse(BaseModel):
     erbringer_name: Optional[str] = None
 
 
+class LeistungResponse(BaseModel):
+    id: int
+    bezeichnung: Optional[str] = None
+    menge: Optional[str] = None
+    wert: Optional[str] = None
+
+
 class InvoiceDetailResponse(BaseModel):
     id: int
     created_at: Optional[str] = None
@@ -109,6 +116,7 @@ class InvoiceDetailResponse(BaseModel):
     erbringer_umsatzsteuer: Optional[str] = None
     empfaenger_name: Optional[str] = None
     empfaenger_anschrift: Optional[str] = None
+    leistungen: list[LeistungResponse] = []
 
 
 # Authentication endpoints
@@ -209,7 +217,7 @@ async def list_invoices(current_user: dict = Depends(get_current_user)):
 
 @app.get("/api/invoices/{invoice_id}", response_model=InvoiceDetailResponse)
 async def get_invoice(invoice_id: int, current_user: dict = Depends(get_current_user)):
-    """Get invoice details."""
+    """Get invoice details with line items."""
     if not supabase:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -217,13 +225,21 @@ async def get_invoice(invoice_id: int, current_user: dict = Depends(get_current_
         )
 
     try:
+        # Fetch invoice
         response = supabase.table("rechnungen").select("*").eq("id", invoice_id).execute()
         if not response.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Invoice not found"
             )
-        return response.data[0]
+
+        invoice = response.data[0]
+
+        # Fetch line items (leistungen)
+        leistungen_response = supabase.table("leistungen").select("*").eq("rechnung_id", invoice_id).execute()
+        invoice["leistungen"] = leistungen_response.data or []
+
+        return invoice
     except HTTPException:
         raise
     except Exception as e:

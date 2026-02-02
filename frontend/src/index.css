@@ -354,3 +354,43 @@ body {
   background-color: rgba(220, 53, 69, 0.1);
   color: var(--color-error);
 }
+
+/* Leistungen table */
+.leistungen-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.leistungen-table th,
+.leistungen-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-gray);
+}
+
+.leistungen-table th {
+  background-color: var(--color-light-gray);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.leistungen-table td {
+  font-size: 0.95rem;
+}
+
+.leistungen-table td.center {
+  text-align: center;
+}
+
+.leistungen-table td.right {
+  text-align: right;
+  font-weight: 500;
+}
+
+.leistungen-table tbody tr:hover {
+  background-color: var(--color-light-gray);
+}

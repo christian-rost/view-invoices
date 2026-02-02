@@ -50,6 +50,34 @@ function DetailView({ invoice, loading }) {
           </div>
           <Field label="Name" value={invoice.empfaenger_name} />
           <Field label="Anschrift" value={invoice.empfaenger_anschrift} fullWidth />
+
+          {invoice.leistungen && invoice.leistungen.length > 0 && (
+            <>
+              <div className="detail-field full-width" style={{ borderTop: '1px solid var(--color-gray)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                <span className="detail-label">Leistungen</span>
+              </div>
+              <div className="detail-field full-width">
+                <table className="leistungen-table">
+                  <thead>
+                    <tr>
+                      <th>Bezeichnung</th>
+                      <th>Menge</th>
+                      <th>Wert</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoice.leistungen.map((leistung) => (
+                      <tr key={leistung.id}>
+                        <td>{leistung.bezeichnung || '-'}</td>
+                        <td className="center">{leistung.menge || '-'}</td>
+                        <td className="right">{leistung.wert || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
