@@ -19,11 +19,11 @@ This file contains technical details, architectural decisions, and important imp
 
 ## Project Overview
 
-View Invoices is a system to view invoices and their attributes stored in a Supabase database (table: `rechnungen`).
+View Invoices is a system to view invoices and their attributes stored in a Supabase database.
 
 **Two screens:**
 1. **Tree View**: Liste aller Rechnungen mit 3 Attributen (datum, nummer, erbringer_name)
-2. **Detail View**: Alle Attribute einer ausgewählten Rechnung
+2. **Detail View**: Alle Attribute einer ausgewählten Rechnung inkl. Leistungspositionen
 
 ## Architecture
 
@@ -100,7 +100,7 @@ view-invoices/
 
 **`components/DetailView.jsx`**
 - All invoice fields in grid layout
-- Status badges, currency formatting
+- Leistungstabelle (Bezeichnung, Menge, Wert)
 
 **Styling (`index.css`)**
 - XQT5 Corporate Design:
@@ -206,7 +206,7 @@ create index idx_leistungen_rechnungs_nummer on leistungen(rechnungs_nummer);
 
 **Verknüpfung:** `leistungen.rechnungs_nummer` → `rechnungen.nummer`
 
-### Spaltenübersicht
+### Spaltenübersicht `rechnungen`
 
 | Spalte | Typ | Beschreibung |
 |--------|-----|--------------|
@@ -221,6 +221,16 @@ create index idx_leistungen_rechnungs_nummer on leistungen(rechnungs_nummer);
 | `erbringer_umsatzsteuer` | text | Umsatzsteuer-ID |
 | `empfaenger_name` | text | Name des Leistungsempfängers |
 | `empfaenger_anschrift` | text | Anschrift des Leistungsempfängers |
+
+### Spaltenübersicht `leistungen`
+
+| Spalte | Typ | Beschreibung |
+|--------|-----|--------------|
+| `id` | bigint | Primary Key (auto-increment) |
+| `rechnungs_nummer` | text | Verknüpfung zu rechnungen.nummer |
+| `bezeichnung` | text | Leistungsbezeichnung |
+| `menge` | text | Menge (z.B. "1", "2") |
+| `wert` | text | Leistungswert (z.B. "8,00 €") |
 
 ### Row Level Security (RLS)
 
