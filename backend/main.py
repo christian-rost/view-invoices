@@ -99,20 +99,16 @@ class InvoiceResponse(BaseModel):
 
 class InvoiceDetailResponse(BaseModel):
     id: int
+    created_at: Optional[str] = None
     datum: Optional[str] = None
     nummer: Optional[str] = None
+    gesamtpreis: Optional[str] = None
     erbringer_name: Optional[str] = None
     erbringer_anschrift: Optional[str] = None
     erbringer_steuernummer: Optional[str] = None
+    erbringer_umsatzsteuer: Optional[str] = None
     empfaenger_name: Optional[str] = None
     empfaenger_anschrift: Optional[str] = None
-    betrag_netto: Optional[float] = None
-    betrag_mwst: Optional[float] = None
-    betrag_brutto: Optional[float] = None
-    waehrung: Optional[str] = None
-    beschreibung: Optional[str] = None
-    zahlungsziel: Optional[str] = None
-    status: Optional[str] = None
 
 
 # Authentication endpoints
