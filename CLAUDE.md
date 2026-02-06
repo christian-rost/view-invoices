@@ -23,7 +23,7 @@ View Invoices is a system to view invoices and their attributes stored in a Supa
 
 **Two screens:**
 1. **Tree View**: Liste aller Rechnungen mit 3 Attributen (datum, nummer, erbringer_name)
-2. **Detail View**: Rechnungsdetails inkl. Leistungspositionen + verknüpfte Bestellung (nebeneinander)
+2. **Detail View**: Rechnungsdetails inkl. Leistungspositionen + verknüpfte Bestellung (nebeneinander) mit Abweichungs-Erkennung
 
 ## Architecture
 
@@ -35,6 +35,9 @@ view-invoices/
 ├── .python-version       # Python 3.10
 ├── start.sh              # Local dev: starts backend + frontend
 ├── .env.example          # Environment template
+├── scripts/
+│   ├── migrate_bestellungen_schema.sql  # Schema-Migration + Testdaten
+│   └── test_mismatch_data.sql           # Test-Abweichungen erzeugen
 ├── backend/
 │   ├── config.py         # Supabase, JWT, CORS config
 │   ├── auth.py           # JWT token handling
@@ -78,7 +81,7 @@ view-invoices/
 - Endpoints:
   - Auth: `/api/auth/register`, `/api/auth/login`, `/api/auth/me`
   - Admin: `/api/admin/users`, `/api/admin/users/{id}`
-  - Invoices: `/api/invoices`, `/api/invoices/{id}`
+  - Invoices: `/api/invoices`, `/api/invoices/{id}` (inkl. Leistungen, Bestellung + Bestellpositionen)
   - Health: `/api/health`
 
 ### Frontend (`frontend/src/`)
@@ -99,14 +102,21 @@ view-invoices/
 - Click to select
 
 **`components/DetailView.jsx`**
-- All invoice fields in grid layout
-- Leistungstabelle (Bezeichnung, Menge, Wert)
+- Linkes Panel: Rechnungsdetails in Grid-Layout + Leistungstabelle (Bezeichnung, Menge, Wert)
+- Rechtes Panel: Bestellungsdetails inkl. Adressen, Versand & Kosten + Bestellpositionstabelle
+- **Abweichungs-Erkennung** zwischen Rechnung und Bestellung:
+  - Gesamtpreis ↔ Gesamtwert
+  - Datum ↔ Datum
+  - Leistungen ↔ Bestellpositionen (Bezeichnung, Menge, Wert/Einzelpreis, Anzahl)
+  - Abweichende Felder werden mit ⚠-Icon und roter Hervorhebung markiert (beide Seiten)
+  - Überzählige Leistungen werden **nicht** markiert, wenn ihr Wert einem Bestellungsfeld entspricht (Rabatt, Versandkosten, MwSt., Zwischensumme)
 
 **Styling (`index.css`)**
 - XQT5 Corporate Design:
   - Primary: `#ee7f00` (Orange)
   - Dark: `#213452` (Navy-Blau)
   - White: `#ffffff`
+- Mismatch-Styles: `.mismatch` (Feld-Ebene), `.cell-mismatch` (Tabellenzellen-Ebene), `.mismatch-icon`
 
 ## Environment Variables
 
