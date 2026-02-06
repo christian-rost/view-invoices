@@ -104,13 +104,27 @@ class LeistungResponse(BaseModel):
     wert: Optional[str] = None
 
 
+class BestellpositionResponse(BaseModel):
+    id: int
+    bezeichnung: Optional[str] = None
+    menge: Optional[str] = None
+    einzelpreis: Optional[str] = None
+
+
 class BestellungResponse(BaseModel):
     id: int
     bestellnummer: Optional[str] = None
     datum: Optional[str] = None
     status: Optional[str] = None
     lieferadresse: Optional[str] = None
+    rechnungsadresse: Optional[str] = None
+    versandart: Optional[str] = None
+    versandkosten: Optional[str] = None
+    rabatt: Optional[str] = None
+    mwst: Optional[str] = None
+    zwischensumme: Optional[str] = None
     gesamtwert: Optional[str] = None
+    positionen: list[BestellpositionResponse] = []
 
 
 class InvoiceDetailResponse(BaseModel):
@@ -256,7 +270,14 @@ async def get_invoice(invoice_id: int, current_user: dict = Depends(get_current_
         # Fetch order (bestellung) by bestellnummer
         if invoice.get("bestellnummer"):
             bestellung_response = supabase.table("bestellungen").select("*").eq("bestellnummer", invoice["bestellnummer"]).execute()
-            invoice["bestellung"] = bestellung_response.data[0] if bestellung_response.data else None
+            if bestellung_response.data:
+                bestellung = bestellung_response.data[0]
+                # Fetch order positions (bestellpositionen)
+                positionen_response = supabase.table("bestellpositionen").select("*").eq("bestellnummer", invoice["bestellnummer"]).execute()
+                bestellung["positionen"] = positionen_response.data or []
+                invoice["bestellung"] = bestellung
+            else:
+                invoice["bestellung"] = None
         else:
             invoice["bestellung"] = None
 

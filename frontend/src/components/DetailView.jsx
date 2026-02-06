@@ -101,7 +101,49 @@ function DetailView({ invoice, loading }) {
               <Field label="Datum" value={invoice.bestellung.datum} />
               <Field label="Status" value={<StatusBadge status={invoice.bestellung.status} />} />
               <Field label="Gesamtwert" value={invoice.bestellung.gesamtwert} isAmount />
+
+              <div className="detail-field full-width" style={{ borderTop: '1px solid var(--color-gray)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                <span className="detail-label">Adressen</span>
+              </div>
               <Field label="Lieferadresse" value={invoice.bestellung.lieferadresse} fullWidth />
+              <Field label="Rechnungsadresse" value={invoice.bestellung.rechnungsadresse} fullWidth />
+
+              <div className="detail-field full-width" style={{ borderTop: '1px solid var(--color-gray)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                <span className="detail-label">Versand & Kosten</span>
+              </div>
+              <Field label="Versandart" value={invoice.bestellung.versandart} />
+              <Field label="Versandkosten" value={invoice.bestellung.versandkosten} isAmount />
+              <Field label="Zwischensumme" value={invoice.bestellung.zwischensumme} isAmount />
+              <Field label="Rabatt" value={invoice.bestellung.rabatt} isAmount />
+              <Field label="MwSt." value={invoice.bestellung.mwst} isAmount />
+
+              {invoice.bestellung.positionen && invoice.bestellung.positionen.length > 0 && (
+                <>
+                  <div className="detail-field full-width" style={{ borderTop: '1px solid var(--color-gray)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                    <span className="detail-label">Bestellpositionen</span>
+                  </div>
+                  <div className="detail-field full-width">
+                    <table className="leistungen-table">
+                      <thead>
+                        <tr>
+                          <th>Bezeichnung</th>
+                          <th>Menge</th>
+                          <th>Einzelpreis</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {invoice.bestellung.positionen.map((pos) => (
+                          <tr key={pos.id}>
+                            <td>{pos.bezeichnung || '-'}</td>
+                            <td className="center">{pos.menge || '-'}</td>
+                            <td className="right">{pos.einzelpreis || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <div className="detail-placeholder">
@@ -139,6 +181,7 @@ function StatusBadge({ status }) {
     'offen': 'pending',
     'processing': 'pending',
     'in bearbeitung': 'pending',
+    'bestätigt': 'pending',
     'cancelled': 'overdue',
     'storniert': 'overdue'
   }
