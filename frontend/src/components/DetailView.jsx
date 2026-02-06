@@ -54,6 +54,38 @@ function DetailView({ invoice, loading }) {
       m.rechnungDatum = true
       m.bestellungDatum = true
     }
+
+    // Positionen vergleichen (Leistungen ↔ Bestellpositionen)
+    const leistungen = invoice.leistungen || []
+    const positionen = b.positionen || []
+    m.leistungen = {}
+    m.positionen = {}
+
+    if (leistungen.length !== positionen.length) {
+      m.positionCount = true
+    }
+
+    const maxLen = Math.max(leistungen.length, positionen.length)
+    for (let i = 0; i < maxLen; i++) {
+      const l = leistungen[i]
+      const p = positionen[i]
+
+      if (!l || !p) {
+        // Überzählige Position auf einer Seite
+        if (l) m.leistungen[i] = { bezeichnung: true, menge: true, wert: true }
+        if (p) m.positionen[i] = { bezeichnung: true, menge: true, einzelpreis: true }
+        continue
+      }
+
+      const lm = {}
+      const pm = {}
+      if (!valuesMatch(l.bezeichnung, p.bezeichnung)) { lm.bezeichnung = true; pm.bezeichnung = true }
+      if (!valuesMatch(l.menge, p.menge)) { lm.menge = true; pm.menge = true }
+      if (!valuesMatch(l.wert, p.einzelpreis)) { lm.wert = true; pm.einzelpreis = true }
+
+      if (Object.keys(lm).length) m.leistungen[i] = lm
+      if (Object.keys(pm).length) m.positionen[i] = pm
+    }
   }
 
   return (
@@ -87,7 +119,10 @@ function DetailView({ invoice, loading }) {
             {invoice.leistungen && invoice.leistungen.length > 0 && (
               <>
                 <div className="detail-field full-width" style={{ borderTop: '1px solid var(--color-gray)', paddingTop: '1rem', marginTop: '0.5rem' }}>
-                  <span className="detail-label">Leistungen</span>
+                  <span className="detail-label">
+                    {m.positionCount && <span className="mismatch-icon" title="Unterschiedliche Anzahl Positionen">⚠</span>}
+                    Leistungen
+                  </span>
                 </div>
                 <div className="detail-field full-width">
                   <table className="leistungen-table">
@@ -99,13 +134,16 @@ function DetailView({ invoice, loading }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {invoice.leistungen.map((leistung) => (
-                        <tr key={leistung.id}>
-                          <td>{leistung.bezeichnung || '-'}</td>
-                          <td className="center">{leistung.menge || '-'}</td>
-                          <td className="right">{leistung.wert || '-'}</td>
-                        </tr>
-                      ))}
+                      {invoice.leistungen.map((leistung, i) => {
+                        const rm = m.leistungen?.[i] || {}
+                        return (
+                          <tr key={leistung.id}>
+                            <td className={rm.bezeichnung ? 'cell-mismatch' : ''}>{leistung.bezeichnung || '-'}</td>
+                            <td className={`center ${rm.menge ? 'cell-mismatch' : ''}`}>{leistung.menge || '-'}</td>
+                            <td className={`right ${rm.wert ? 'cell-mismatch' : ''}`}>{leistung.wert || '-'}</td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -146,7 +184,10 @@ function DetailView({ invoice, loading }) {
               {invoice.bestellung.positionen && invoice.bestellung.positionen.length > 0 && (
                 <>
                   <div className="detail-field full-width" style={{ borderTop: '1px solid var(--color-gray)', paddingTop: '1rem', marginTop: '0.5rem' }}>
-                    <span className="detail-label">Bestellpositionen</span>
+                    <span className="detail-label">
+                      {m.positionCount && <span className="mismatch-icon" title="Unterschiedliche Anzahl Positionen">⚠</span>}
+                      Bestellpositionen
+                    </span>
                   </div>
                   <div className="detail-field full-width">
                     <table className="leistungen-table">
@@ -158,13 +199,16 @@ function DetailView({ invoice, loading }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {invoice.bestellung.positionen.map((pos) => (
-                          <tr key={pos.id}>
-                            <td>{pos.bezeichnung || '-'}</td>
-                            <td className="center">{pos.menge || '-'}</td>
-                            <td className="right">{pos.einzelpreis || '-'}</td>
-                          </tr>
-                        ))}
+                        {invoice.bestellung.positionen.map((pos, i) => {
+                          const pm = m.positionen?.[i] || {}
+                          return (
+                            <tr key={pos.id}>
+                              <td className={pm.bezeichnung ? 'cell-mismatch' : ''}>{pos.bezeichnung || '-'}</td>
+                              <td className={`center ${pm.menge ? 'cell-mismatch' : ''}`}>{pos.menge || '-'}</td>
+                              <td className={`right ${pm.einzelpreis ? 'cell-mismatch' : ''}`}>{pos.einzelpreis || '-'}</td>
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>

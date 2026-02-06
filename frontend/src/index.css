@@ -383,6 +383,11 @@ body {
   font-size: 0.85rem;
 }
 
+.leistungen-table td.cell-mismatch {
+  background-color: rgba(220, 53, 69, 0.08);
+  border-left: 3px solid var(--color-error);
+}
+
 /* Leistungen table */
 .leistungen-table {
   width: 100%;

@@ -10,5 +10,9 @@ UPDATE bestellungen SET datum = '20.01.2026' WHERE bestellnummer = '619994';
 -- Lieferadresse leicht abweichend setzen (PLZ anders)
 UPDATE bestellungen SET lieferadresse = 'Uwe Will, Nördliche Hauptstraße 21, 61138 Schöneck' WHERE bestellnummer = '619994';
 
+-- Bestellposition: Menge abweichend setzen (Leistung hat vermutlich "1")
+UPDATE bestellpositionen SET menge = '2' WHERE bestellnummer = '619994';
+
 -- Rückgängig machen (bei Bedarf):
 -- UPDATE bestellungen SET gesamtwert = '61,24 €', datum = '22.01.2026', lieferadresse = 'Uwe Will, Nördliche Hauptstraße 21, 61137 Schöneck' WHERE bestellnummer = '619994';
+-- UPDATE bestellpositionen SET menge = '1' WHERE bestellnummer = '619994';
