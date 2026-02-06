@@ -45,7 +45,6 @@ function DetailView({ invoice, loading }) {
   const m = {}
   if (invoice.bestellung) {
     const b = invoice.bestellung
-    const rechnungAdresse = [invoice.empfaenger_name, invoice.empfaenger_anschrift].filter(Boolean).join(' ')
 
     if (!valuesMatch(invoice.gesamtpreis, b.gesamtwert)) {
       m.gesamtpreis = true
@@ -54,14 +53,6 @@ function DetailView({ invoice, loading }) {
     if (!valuesMatch(invoice.datum, b.datum)) {
       m.rechnungDatum = true
       m.bestellungDatum = true
-    }
-    if (!valuesMatch(rechnungAdresse, b.lieferadresse)) {
-      m.empfaenger = true
-      m.lieferadresse = true
-    }
-    if (!valuesMatch(rechnungAdresse, b.rechnungsadresse)) {
-      m.empfaenger = true
-      m.rechnungsadresse = true
     }
   }
 
@@ -90,8 +81,8 @@ function DetailView({ invoice, loading }) {
             <div className="detail-field full-width" style={{ borderTop: '1px solid var(--color-gray)', paddingTop: '1rem', marginTop: '0.5rem' }}>
               <span className="detail-label">Leistungsempfänger</span>
             </div>
-            <Field label="Name" value={invoice.empfaenger_name} mismatch={m.empfaenger} />
-            <Field label="Anschrift" value={invoice.empfaenger_anschrift} fullWidth mismatch={m.empfaenger} />
+            <Field label="Name" value={invoice.empfaenger_name} />
+            <Field label="Anschrift" value={invoice.empfaenger_anschrift} fullWidth />
 
             {invoice.leistungen && invoice.leistungen.length > 0 && (
               <>
@@ -140,8 +131,8 @@ function DetailView({ invoice, loading }) {
               <div className="detail-field full-width" style={{ borderTop: '1px solid var(--color-gray)', paddingTop: '1rem', marginTop: '0.5rem' }}>
                 <span className="detail-label">Adressen</span>
               </div>
-              <Field label="Lieferadresse" value={invoice.bestellung.lieferadresse} fullWidth mismatch={m.lieferadresse} />
-              <Field label="Rechnungsadresse" value={invoice.bestellung.rechnungsadresse} fullWidth mismatch={m.rechnungsadresse} />
+              <Field label="Lieferadresse" value={invoice.bestellung.lieferadresse} fullWidth />
+              <Field label="Rechnungsadresse" value={invoice.bestellung.rechnungsadresse} fullWidth />
 
               <div className="detail-field full-width" style={{ borderTop: '1px solid var(--color-gray)', paddingTop: '1rem', marginTop: '0.5rem' }}>
                 <span className="detail-label">Versand & Kosten</span>
