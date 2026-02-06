@@ -3,10 +3,21 @@ function normalize(str) {
   return str.toLowerCase().replace(/[,\n\r]/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
+function normalizeAmount(str) {
+  if (!str) return ''
+  return str.replace(/[-−]/g, '').replace(/\s+/g, '').trim()
+}
+
 function valuesMatch(a, b) {
   if (!a && !b) return true
   if (!a || !b) return false
   return normalize(a) === normalize(b)
+}
+
+function amountMatchesAny(amount, values) {
+  const norm = normalizeAmount(amount)
+  if (!norm) return false
+  return values.some(v => normalizeAmount(v) === norm)
 }
 
 function DetailView({ invoice, loading }) {
@@ -71,8 +82,13 @@ function DetailView({ invoice, loading }) {
       const p = positionen[i]
 
       if (!l || !p) {
-        // Überzählige Position auf einer Seite
-        if (l) m.leistungen[i] = { bezeichnung: true, menge: true, wert: true }
+        // Überzählige Leistung: prüfen ob Wert einem Bestellungsfeld entspricht
+        if (l) {
+          const bestellungWerte = [b.rabatt, b.versandkosten, b.mwst, b.zwischensumme].filter(Boolean)
+          if (!amountMatchesAny(l.wert, bestellungWerte)) {
+            m.leistungen[i] = { bezeichnung: true, menge: true, wert: true }
+          }
+        }
         if (p) m.positionen[i] = { bezeichnung: true, menge: true, einzelpreis: true }
         continue
       }
