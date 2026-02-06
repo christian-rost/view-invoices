@@ -1,3 +1,14 @@
+function normalize(str) {
+  if (!str) return ''
+  return str.toLowerCase().replace(/[,\n\r]/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+function valuesMatch(a, b) {
+  if (!a && !b) return true
+  if (!a || !b) return false
+  return normalize(a) === normalize(b)
+}
+
 function DetailView({ invoice, loading }) {
   if (loading) {
     return (
@@ -30,6 +41,30 @@ function DetailView({ invoice, loading }) {
     )
   }
 
+  // Abweichungen zwischen Rechnung und Bestellung berechnen
+  const m = {}
+  if (invoice.bestellung) {
+    const b = invoice.bestellung
+    const rechnungAdresse = [invoice.empfaenger_name, invoice.empfaenger_anschrift].filter(Boolean).join(' ')
+
+    if (!valuesMatch(invoice.gesamtpreis, b.gesamtwert)) {
+      m.gesamtpreis = true
+      m.gesamtwert = true
+    }
+    if (!valuesMatch(invoice.datum, b.datum)) {
+      m.rechnungDatum = true
+      m.bestellungDatum = true
+    }
+    if (!valuesMatch(rechnungAdresse, b.lieferadresse)) {
+      m.empfaenger = true
+      m.lieferadresse = true
+    }
+    if (!valuesMatch(rechnungAdresse, b.rechnungsadresse)) {
+      m.empfaenger = true
+      m.rechnungsadresse = true
+    }
+  }
+
   return (
     <div className="detail-container">
       {/* Rechnungsdetails */}
@@ -40,8 +75,8 @@ function DetailView({ invoice, loading }) {
         <div className="detail-content">
           <div className="detail-grid">
             <Field label="Rechnungsnummer" value={invoice.nummer} />
-            <Field label="Datum" value={invoice.datum} />
-            <Field label="Gesamtpreis" value={invoice.gesamtpreis} isAmount />
+            <Field label="Datum" value={invoice.datum} mismatch={m.rechnungDatum} />
+            <Field label="Gesamtpreis" value={invoice.gesamtpreis} isAmount mismatch={m.gesamtpreis} />
             <Field label="Bestellnummer" value={invoice.bestellnummer} />
 
             <div className="detail-field full-width" style={{ borderTop: '1px solid var(--color-gray)', paddingTop: '1rem', marginTop: '0.5rem' }}>
@@ -55,8 +90,8 @@ function DetailView({ invoice, loading }) {
             <div className="detail-field full-width" style={{ borderTop: '1px solid var(--color-gray)', paddingTop: '1rem', marginTop: '0.5rem' }}>
               <span className="detail-label">Leistungsempfänger</span>
             </div>
-            <Field label="Name" value={invoice.empfaenger_name} />
-            <Field label="Anschrift" value={invoice.empfaenger_anschrift} fullWidth />
+            <Field label="Name" value={invoice.empfaenger_name} mismatch={m.empfaenger} />
+            <Field label="Anschrift" value={invoice.empfaenger_anschrift} fullWidth mismatch={m.empfaenger} />
 
             {invoice.leistungen && invoice.leistungen.length > 0 && (
               <>
@@ -98,15 +133,15 @@ function DetailView({ invoice, loading }) {
           {invoice.bestellung ? (
             <div className="detail-grid">
               <Field label="Bestellnummer" value={invoice.bestellung.bestellnummer} />
-              <Field label="Datum" value={invoice.bestellung.datum} />
+              <Field label="Datum" value={invoice.bestellung.datum} mismatch={m.bestellungDatum} />
               <Field label="Status" value={<StatusBadge status={invoice.bestellung.status} />} />
-              <Field label="Gesamtwert" value={invoice.bestellung.gesamtwert} isAmount />
+              <Field label="Gesamtwert" value={invoice.bestellung.gesamtwert} isAmount mismatch={m.gesamtwert} />
 
               <div className="detail-field full-width" style={{ borderTop: '1px solid var(--color-gray)', paddingTop: '1rem', marginTop: '0.5rem' }}>
                 <span className="detail-label">Adressen</span>
               </div>
-              <Field label="Lieferadresse" value={invoice.bestellung.lieferadresse} fullWidth />
-              <Field label="Rechnungsadresse" value={invoice.bestellung.rechnungsadresse} fullWidth />
+              <Field label="Lieferadresse" value={invoice.bestellung.lieferadresse} fullWidth mismatch={m.lieferadresse} />
+              <Field label="Rechnungsadresse" value={invoice.bestellung.rechnungsadresse} fullWidth mismatch={m.rechnungsadresse} />
 
               <div className="detail-field full-width" style={{ borderTop: '1px solid var(--color-gray)', paddingTop: '1rem', marginTop: '0.5rem' }}>
                 <span className="detail-label">Versand & Kosten</span>
@@ -158,10 +193,13 @@ function DetailView({ invoice, loading }) {
   )
 }
 
-function Field({ label, value, fullWidth = false, isAmount = false }) {
+function Field({ label, value, fullWidth = false, isAmount = false, mismatch = false }) {
   return (
-    <div className={`detail-field ${fullWidth ? 'full-width' : ''}`}>
-      <span className="detail-label">{label}</span>
+    <div className={`detail-field ${fullWidth ? 'full-width' : ''} ${mismatch ? 'mismatch' : ''}`}>
+      <span className="detail-label">
+        {mismatch && <span className="mismatch-icon" title="Abweichung zwischen Rechnung und Bestellung">⚠</span>}
+        {label}
+      </span>
       <span className={`detail-value ${isAmount ? 'amount' : ''}`}>
         {value || '-'}
       </span>

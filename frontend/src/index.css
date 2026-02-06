@@ -369,6 +369,20 @@ body {
   color: var(--color-error);
 }
 
+/* Mismatch highlighting */
+.detail-field.mismatch {
+  background-color: rgba(220, 53, 69, 0.08);
+  border-left: 3px solid var(--color-error);
+  padding-left: 0.5rem;
+  border-radius: 4px;
+}
+
+.mismatch-icon {
+  margin-right: 0.25rem;
+  color: var(--color-error);
+  font-size: 0.85rem;
+}
+
 /* Leistungen table */
 .leistungen-table {
   width: 100%;
