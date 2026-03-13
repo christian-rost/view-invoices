@@ -37,8 +37,11 @@ function TreeView({ invoices, selectedInvoice, onSelect, loading, error }) {
               className={`tree-item ${selectedInvoice?.id === invoice.id ? 'selected' : ''}`}
               onClick={() => onSelect(invoice)}
             >
-              <div className="tree-item-nummer">
-                {invoice.nummer || `#${invoice.id}`}
+              <div className="tree-item-top-row">
+                <div className="tree-item-nummer">
+                  {invoice.nummer || `#${invoice.id}`}
+                </div>
+                <WorkflowBadge status={invoice.workflow_status || 'offen'} small />
               </div>
               <div className="tree-item-datum">
                 {invoice.datum ? formatDate(invoice.datum) : 'Kein Datum'}
@@ -51,6 +54,23 @@ function TreeView({ invoices, selectedInvoice, onSelect, loading, error }) {
         )}
       </div>
     </div>
+  )
+}
+
+export function WorkflowBadge({ status, small = false }) {
+  const labels = {
+    offen: 'Offen',
+    in_pruefung: 'In Prüfung',
+    freigegeben: 'Freigegeben',
+    archiviert: 'Archiviert',
+    abgelehnt: 'Abgelehnt',
+    zurueckgestellt: 'Zurückgestellt',
+  }
+  const s = status || 'offen'
+  return (
+    <span className={`workflow-badge workflow-badge-${s}${small ? ' workflow-badge-small' : ''}`}>
+      {labels[s] || s}
+    </span>
   )
 }
 

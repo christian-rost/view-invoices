@@ -39,7 +39,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
     allow_headers=["Authorization", "Content-Type"],
 )
 
@@ -90,11 +90,26 @@ class UserResponse(BaseModel):
     is_admin: bool = False
 
 
+WORKFLOW_STATUSES = {"offen", "in_pruefung", "freigegeben", "archiviert", "abgelehnt", "zurueckgestellt"}
+
+
+class WorkflowStatusUpdate(BaseModel):
+    status: str
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, v: str) -> str:
+        if v not in WORKFLOW_STATUSES:
+            raise ValueError(f"Invalid status. Must be one of: {', '.join(WORKFLOW_STATUSES)}")
+        return v
+
+
 class InvoiceResponse(BaseModel):
     id: int
     datum: Optional[str] = None
     nummer: Optional[str] = None
     erbringer_name: Optional[str] = None
+    workflow_status: Optional[str] = None
 
 
 class LeistungResponse(BaseModel):
@@ -140,6 +155,7 @@ class InvoiceDetailResponse(BaseModel):
     erbringer_umsatzsteuer: Optional[str] = None
     empfaenger_name: Optional[str] = None
     empfaenger_anschrift: Optional[str] = None
+    workflow_status: Optional[str] = None
     leistungen: list[LeistungResponse] = []
     bestellung: Optional[BestellungResponse] = None
 
@@ -230,7 +246,7 @@ async def list_invoices(current_user: dict = Depends(get_current_user)):
         )
 
     try:
-        response = supabase.table("rechnungen").select("id, datum, nummer, erbringer_name").execute()
+        response = supabase.table("rechnungen").select("id, datum, nummer, erbringer_name, workflow_status").execute()
         return response.data
     except Exception as e:
         logger.error(f"Error fetching invoices: {e}")
@@ -289,6 +305,64 @@ async def get_invoice(invoice_id: int, current_user: dict = Depends(get_current_
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch invoice"
+        )
+
+
+@app.patch("/api/invoices/{invoice_id}/status")
+async def update_invoice_status(
+    invoice_id: int,
+    body: WorkflowStatusUpdate,
+    current_user: dict = Depends(get_current_user),
+):
+    """Update the workflow status of an invoice."""
+    if not supabase:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database not configured"
+        )
+
+    try:
+        response = (
+            supabase.table("rechnungen")
+            .update({"workflow_status": body.status})
+            .eq("id", invoice_id)
+            .execute()
+        )
+        if not response.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Invoice not found"
+            )
+        logger.info(f"Invoice {invoice_id} workflow_status → {body.status} by {current_user['username']}")
+        return {"id": invoice_id, "workflow_status": body.status}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating status for invoice {invoice_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update status"
+        )
+
+
+@app.post("/api/invoices/reset-status")
+async def reset_all_invoice_status(current_user: dict = Depends(get_current_user)):
+    """Reset workflow_status to 'offen' for all invoices."""
+    if not supabase:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database not configured"
+        )
+
+    try:
+        supabase.table("rechnungen").update({"workflow_status": "offen"}).neq("id", 0).execute()
+        logger.info(f"All invoice workflow statuses reset to 'offen' by {current_user['username']}")
+        return {"message": "All statuses reset to 'offen'"}
+    except Exception as e:
+        logger.error(f"Error resetting all statuses: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset statuses"
         )
 
 

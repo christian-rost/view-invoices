@@ -65,6 +65,37 @@ function App() {
     }
   }
 
+  async function updateWorkflowStatus(invoiceId, newStatus) {
+    try {
+      const response = await fetchWithAuth(`/api/invoices/${invoiceId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (response.ok) {
+        setInvoices(prev =>
+          prev.map(inv => inv.id === invoiceId ? { ...inv, workflow_status: newStatus } : inv)
+        )
+        setInvoiceDetail(prev => prev ? { ...prev, workflow_status: newStatus } : prev)
+      }
+    } catch (err) {
+      // ignore
+    }
+  }
+
+  async function resetAllStatus() {
+    if (!window.confirm('Alle Workflow-Status auf "offen" zurücksetzen?')) return
+    try {
+      const response = await fetchWithAuth('/api/invoices/reset-status', { method: 'POST' })
+      if (response.ok) {
+        setInvoices(prev => prev.map(inv => ({ ...inv, workflow_status: 'offen' })))
+        setInvoiceDetail(prev => prev ? { ...prev, workflow_status: 'offen' } : prev)
+      }
+    } catch (err) {
+      // ignore
+    }
+  }
+
   if (loading) {
     return (
       <div className="loading" style={{ minHeight: '100vh' }}>
@@ -84,6 +115,9 @@ function App() {
         <h1>View Invoices</h1>
         <div className="header-user">
           <span>{user?.username}</span>
+          <button className="btn btn-secondary" onClick={resetAllStatus}>
+            Status zurücksetzen
+          </button>
           <button className="btn btn-outline" onClick={logout}>
             Logout
           </button>
@@ -102,6 +136,7 @@ function App() {
         <DetailView
           invoice={invoiceDetail}
           loading={loadingDetail}
+          onStatusUpdate={updateWorkflowStatus}
         />
       </main>
     </div>

@@ -20,7 +20,34 @@ function amountMatchesAny(amount, values) {
   return values.some(v => normalizeAmount(v) === norm)
 }
 
-function DetailView({ invoice, loading }) {
+import { WorkflowBadge } from './TreeView.jsx'
+
+const TRANSITIONS = {
+  offen: ['in_pruefung', 'freigegeben', 'abgelehnt', 'zurueckgestellt'],
+  in_pruefung: ['freigegeben', 'abgelehnt', 'zurueckgestellt'],
+  freigegeben: ['archiviert', 'zurueckgestellt'],
+  archiviert: ['zurueckgestellt'],
+  abgelehnt: ['in_pruefung', 'zurueckgestellt'],
+  zurueckgestellt: ['in_pruefung', 'freigegeben', 'abgelehnt'],
+}
+
+const ACTION_LABELS = {
+  in_pruefung: 'In Prüfung',
+  freigegeben: 'Freigeben',
+  archiviert: 'Archivieren',
+  abgelehnt: 'Ablehnen',
+  zurueckgestellt: 'Zurückstellen',
+}
+
+const ACTION_BTN_CLASS = {
+  in_pruefung: 'btn-primary',
+  freigegeben: 'btn-success',
+  archiviert: 'btn-dark',
+  abgelehnt: 'btn-danger',
+  zurueckgestellt: 'btn-warning',
+}
+
+function DetailView({ invoice, loading, onStatusUpdate }) {
   if (loading) {
     return (
       <div className="detail-container">
@@ -110,6 +137,23 @@ function DetailView({ invoice, loading }) {
       <div className="detail-view">
         <div className="detail-header">
           Rechnung {invoice.nummer || `#${invoice.id}`}
+        </div>
+        <div className="workflow-bar">
+          <div className="workflow-bar-status">
+            <span className="detail-label">Workflow</span>
+            <WorkflowBadge status={invoice.workflow_status || 'offen'} />
+          </div>
+          <div className="workflow-bar-actions">
+            {(TRANSITIONS[invoice.workflow_status || 'offen'] || []).map(target => (
+              <button
+                key={target}
+                className={`btn ${ACTION_BTN_CLASS[target]}`}
+                onClick={() => onStatusUpdate(invoice.id, target)}
+              >
+                {ACTION_LABELS[target]}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="detail-content">
           <div className="detail-grid">

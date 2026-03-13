@@ -427,3 +427,103 @@ body {
 .leistungen-table tbody tr:hover {
   background-color: var(--color-light-gray);
 }
+
+/* Workflow badges */
+.workflow-badge {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.workflow-badge-small {
+  font-size: 0.68rem;
+  padding: 0.15rem 0.5rem;
+}
+
+.workflow-badge-offen          { background: #efefef; color: #888; }
+.workflow-badge-in_pruefung    { background: rgba(238, 127, 0, 0.12); color: #c96b00; }
+.workflow-badge-freigegeben    { background: rgba(40, 167, 69, 0.12); color: #1e7e34; }
+.workflow-badge-archiviert     { background: rgba(33, 52, 82, 0.12); color: #213452; }
+.workflow-badge-abgelehnt      { background: rgba(220, 53, 69, 0.12); color: #dc3545; }
+.workflow-badge-zurueckgestellt { background: rgba(255, 193, 7, 0.18); color: #8a6600; }
+
+/* Workflow bar in detail view */
+.workflow-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-light-gray);
+  border-bottom: 1px solid var(--color-gray);
+  flex-wrap: wrap;
+}
+
+.workflow-bar-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.workflow-bar-status .detail-label {
+  margin: 0;
+}
+
+.workflow-bar-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.workflow-bar-actions .btn {
+  font-size: 0.82rem;
+  padding: 0.35rem 0.8rem;
+}
+
+/* Tree item top row */
+.tree-item-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Additional button variants */
+.btn-success {
+  background-color: var(--color-success);
+  color: var(--color-white);
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #1e7e34;
+}
+
+.btn-danger {
+  background-color: var(--color-error);
+  color: var(--color-white);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+.btn-warning {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background-color: #e0a800;
+}
+
+.btn-dark {
+  background-color: var(--color-dark);
+  color: var(--color-white);
+}
+
+.btn-dark:hover:not(:disabled) {
+  background-color: #1a2840;
+}
