@@ -8,9 +8,19 @@ function normalizeAmount(str) {
   return str.replace(/[-−]/g, '').replace(/\s+/g, '').trim()
 }
 
+function parseGermanNumber(str) {
+  if (!str) return null
+  const cleaned = str.replace(/[€$£\s]/g, '').replace(',', '.')
+  const n = parseFloat(cleaned)
+  return isNaN(n) ? null : n
+}
+
 function valuesMatch(a, b) {
   if (!a && !b) return true
   if (!a || !b) return false
+  const na = parseGermanNumber(a)
+  const nb = parseGermanNumber(b)
+  if (na !== null && nb !== null) return na === nb
   return normalize(a) === normalize(b)
 }
 
