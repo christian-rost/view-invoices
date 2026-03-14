@@ -77,6 +77,7 @@ export function WorkflowBadge({ status, small = false }) {
 function formatDate(dateString) {
   try {
     const date = new Date(dateString)
+    if (isNaN(date.getTime())) return dateString
     return date.toLocaleDateString('de-DE', {
       day: '2-digit',
       month: '2-digit',
