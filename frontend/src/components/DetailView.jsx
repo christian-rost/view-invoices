@@ -88,10 +88,6 @@ function DetailView({ invoice, loading, onStatusUpdate }) {
       m.gesamtpreis = true
       m.gesamtwert = true
     }
-    if (!valuesMatch(invoice.datum, b.datum)) {
-      m.rechnungDatum = true
-      m.bestellungDatum = true
-    }
 
     // Positionen vergleichen (Leistungen ↔ Bestellpositionen)
     const leistungen = invoice.leistungen || []
@@ -158,7 +154,7 @@ function DetailView({ invoice, loading, onStatusUpdate }) {
         <div className="detail-content">
           <div className="detail-grid">
             <Field label="Rechnungsnummer" value={invoice.nummer} />
-            <Field label="Datum" value={invoice.datum} mismatch={m.rechnungDatum} />
+            <Field label="Datum" value={invoice.datum} />
             <Field label="Gesamtpreis" value={invoice.gesamtpreis} isAmount mismatch={m.gesamtpreis} />
             <Field label="Bestellnummer" value={invoice.bestellnummer} />
 
@@ -222,7 +218,7 @@ function DetailView({ invoice, loading, onStatusUpdate }) {
           {invoice.bestellung ? (
             <div className="detail-grid">
               <Field label="Bestellnummer" value={invoice.bestellung.bestellnummer} />
-              <Field label="Datum" value={invoice.bestellung.datum} mismatch={m.bestellungDatum} />
+              <Field label="Datum" value={invoice.bestellung.datum} />
               <Field label="Status" value={<StatusBadge status={invoice.bestellung.status} />} />
               <Field label="Gesamtwert" value={invoice.bestellung.gesamtwert} isAmount mismatch={m.gesamtwert} />
 
